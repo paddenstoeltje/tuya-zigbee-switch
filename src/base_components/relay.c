@@ -24,7 +24,7 @@ void relay_on(relay_t *relay)
     relay->on_change(relay->callback_param, 1);
   }
   // wacht 75ms
-  WaitMs(100);
+  WaitMs(75);
 
   //Zet uit
   printf("relay_off\r\n");
@@ -38,6 +38,8 @@ void relay_on(relay_t *relay)
   {
     relay->on_change(relay->callback_param, 0);
   }
+  // wacht 75ms
+  WaitMs(75);
 
 }
 
@@ -57,7 +59,7 @@ void relay_off(relay_t *relay)
     relay->on_change(relay->callback_param, 1);
   }
   // wacht 75ms
-  WaitMs(100);
+  WaitMs(75);
   
   //Zet uit
   printf("relay_off\r\n");
@@ -71,6 +73,8 @@ void relay_off(relay_t *relay)
   {
     relay->on_change(relay->callback_param, 0);
   }
+  // wacht 75ms
+  WaitMs(75);
 }
 
 //WSA: toggle relay zet de relay gewoon aan. Ik misbruik deze cluster zodat ik de brightness kan veranderen.
