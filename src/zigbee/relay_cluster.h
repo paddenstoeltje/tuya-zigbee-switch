@@ -17,7 +17,6 @@ typedef struct
   zclAttrInfo_t attr_infos[4];
   relay_t *     relay;
   led_t *       indicator_led;
-  u8            last_sequence_num;    // Track last processed sequence number
 } zigbee_relay_cluster;
 
 void relay_cluster_add_to_endpoint(zigbee_relay_cluster *cluster, zigbee_endpoint *endpoint);

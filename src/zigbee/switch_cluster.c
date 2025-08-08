@@ -129,13 +129,13 @@ void switch_cluster_on_button_press(zigbee_switch_cluster *cluster)
         relay_cluster_off(relay_cluster);
         break;
       case ZCL_ONOFF_CONFIGURATION_SWITCH_ACTION_TOGGLE_SIMPLE:
-        relay_cluster_toggle(relay_cluster);
+        //relay_cluster_toggle(relay_cluster);
         break;
       case ZCL_ONOFF_CONFIGURATION_SWITCH_ACTION_TOGGLE_SMART_SYNC:
-        relay_cluster_toggle(relay_cluster);
+        //relay_cluster_toggle(relay_cluster);
         break;
       case ZCL_ONOFF_CONFIGURATION_SWITCH_ACTION_TOGGLE_SMART_OPPOSITE:
-        relay_cluster_toggle(relay_cluster);
+        //relay_cluster_toggle(relay_cluster);
         break;
       }
     }
@@ -206,13 +206,13 @@ void switch_cluster_on_button_release(zigbee_switch_cluster *cluster)
         relay_cluster_on(relay_cluster);
         break;
       case ZCL_ONOFF_CONFIGURATION_SWITCH_ACTION_TOGGLE_SIMPLE:
-        relay_cluster_toggle(relay_cluster);
+        //relay_cluster_toggle(relay_cluster);
         break;
       case ZCL_ONOFF_CONFIGURATION_SWITCH_ACTION_TOGGLE_SMART_SYNC:
-        relay_cluster_toggle(relay_cluster);
+        //relay_cluster_toggle(relay_cluster);
         break;
       case ZCL_ONOFF_CONFIGURATION_SWITCH_ACTION_TOGGLE_SMART_OPPOSITE:
-        relay_cluster_toggle(relay_cluster);
+        //relay_cluster_toggle(relay_cluster);
         break;
       }
     }
@@ -285,7 +285,7 @@ void switch_cluster_on_button_long_press(zigbee_switch_cluster *cluster)
 
   if (cluster->relay_mode == ZCL_ONOFF_CONFIGURATION_RELAY_MODE_LONG)
   {
-    relay_cluster_toggle(relay_cluster);
+    //relay_cluster_toggle(relay_cluster);
   }
 }
 
