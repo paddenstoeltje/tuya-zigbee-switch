@@ -19,6 +19,7 @@ void relay_cluster_load_attrs_from_nv(zigbee_relay_cluster *cluster);
 void relay_cluster_handle_startup_mode(zigbee_relay_cluster *cluster);
 
 void sync_indicator_led(zigbee_relay_cluster *cluster);
+bool is_sequence_valid(zigbee_relay_cluster *cluster, u8 new_seq);
 
 zigbee_relay_cluster *relay_cluster_by_endpoint[10];
 
@@ -39,6 +40,10 @@ void relay_cluster_add_to_endpoint(zigbee_relay_cluster *cluster, zigbee_endpoin
 {
   relay_cluster_by_endpoint[endpoint->index] = cluster;
   cluster->endpoint = endpoint->index;
+  
+  // Initialize sequence tracking
+  cluster->last_sequence_num = 255;  // Initialize to 255 so first real command (usually 0 or 1) is accepted
+  
   relay_cluster_load_attrs_from_nv(cluster);
 
   cluster->relay->callback_param = cluster;
@@ -72,17 +77,27 @@ status_t relay_cluster_callback_trampoline(zclIncomingAddrInfo_t *pAddrInfo, u8 
 
 status_t relay_cluster_callback(zigbee_relay_cluster *cluster, zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
+  // Check sequence number to prevent duplicate processing
+  if (!is_sequence_valid(cluster, pAddrInfo->seqNum))
+  {
+    return(ZCL_STA_SUCCESS);  // Ignore duplicate/old sequences
+  }
+
+  printf("Processing OnOff command: %d, seq: %d\r\n", cmdId, pAddrInfo->seqNum);
+
   if (cmdId == ZCL_CMD_ONOFF_ON)
   {
-    relay_cluster_on(cluster);
+    relay_cluster_on(cluster);//wsa: toggle for direct binding
+    relay_cluster_off(cluster);    
   }
   else if (cmdId == ZCL_CMD_ONOFF_OFF)
   {
-    relay_cluster_off(cluster);
+    relay_cluster_on(cluster);//wsa: toggle for direct binding
+    relay_cluster_off(cluster);    
   }
   else if (cmdId == ZCL_CMD_ONOFF_TOGGLE)
   {
-    relay_cluster_toggle(cluster);
+    relay_cluster_on(cluster); //wsa: aangepast; laat toe de brightness aan te passen
   }
   else
   {
@@ -90,6 +105,38 @@ status_t relay_cluster_callback(zigbee_relay_cluster *cluster, zclIncomingAddrIn
   }
 
   return(ZCL_STA_SUCCESS);
+}
+
+bool is_sequence_valid(zigbee_relay_cluster *cluster, u8 new_seq)
+{
+  // Allow sequences 0, 1, 2 to handle device resets/restarts
+  if (new_seq <= 2)
+  {
+    printf("Allowing low sequence: %d (reset/restart)\r\n", new_seq);
+    cluster->last_sequence_num = new_seq;
+    return true;
+  }
+
+  // Check for sequence rollover (255 -> 0, but we handle 0-2 above)
+  // If new sequence is much smaller than last, it might be a rollover
+  if (cluster->last_sequence_num > 250 && new_seq < 10)
+  {
+    printf("Sequence rollover detected: %d -> %d\r\n", cluster->last_sequence_num, new_seq);
+    cluster->last_sequence_num = new_seq;
+    return true;
+  }
+
+  // Normal case: new sequence must be greater than last
+  if (new_seq > cluster->last_sequence_num)
+  {
+    printf("Valid sequence progression: %d -> %d\r\n", cluster->last_sequence_num, new_seq);
+    cluster->last_sequence_num = new_seq;
+    return true;
+  }
+
+  // Duplicate or out-of-order sequence
+  printf("Ignoring duplicate/old sequence: current=%d, received=%d\r\n", cluster->last_sequence_num, new_seq);
+  return false;
 }
 
 void sync_indicator_led(zigbee_relay_cluster *cluster)
