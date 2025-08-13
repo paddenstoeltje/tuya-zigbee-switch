@@ -3,3 +3,4 @@ sdk
 toolchain
 .vscode
 .venv
+*.7z
