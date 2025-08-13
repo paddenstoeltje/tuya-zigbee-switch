@@ -126,6 +126,7 @@ void app_task(void)
 {
   millis_update();
   periferals_update();
+  process_all_relay_timings(); // Process relay minimum on-time requirements
   if (bdb_isIdle())
   {
     if (zb_isDeviceJoinedNwk())

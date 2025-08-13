@@ -17,5 +17,6 @@ void periferals_update();
 void parse_config();
 void init_reporting();
 void handle_version_changes();
+void process_all_relay_timings();
 
 #endif

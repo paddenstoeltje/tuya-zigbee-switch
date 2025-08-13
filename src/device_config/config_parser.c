@@ -6,6 +6,7 @@
 #include "zigbee/general.h"
 #include "ota.h"
 
+#include "base_components/relay.h"
 #include "base_components/led.h"
 #include "base_components/network_indicator.h"
 #include "chip_8258/gpio.h"
@@ -180,6 +181,9 @@ void parse_config()
         init_gpio_output(pin);
         relays[relays_cnt].off_pin = pin;
       }
+
+      // Initialize relay with default timing parameters
+      relay_init(&relays[relays_cnt]);
 
       relay_clusters[relay_clusters_cnt].relay = &relays[relays_cnt];
 
@@ -527,4 +531,15 @@ u32 parseInt(const char *s)
     n = 10 * n + (*s++ - '0');
   }
   return(n);
+}
+
+/**
+ * @brief Process timing for all relays - handles minimum on-time requirements
+ */
+void process_all_relay_timings(void)
+{
+  for (u8 i = 0; i < relays_cnt; i++)
+  {
+    relay_process_timing(&relays[i]);
+  }
 }

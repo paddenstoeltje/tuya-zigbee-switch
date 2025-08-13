@@ -40,6 +40,7 @@ void relay_cluster_add_to_endpoint(zigbee_relay_cluster *cluster, zigbee_endpoin
   relay_cluster_by_endpoint[endpoint->index] = cluster;
   cluster->endpoint = endpoint->index;
   relay_cluster_load_attrs_from_nv(cluster);
+  relay_cluster_init_sequence_tracking(cluster);  // Initialize sequence tracking
 
   cluster->relay->callback_param = cluster;
   cluster->relay->on_change      = (ev_relay_callback_t)relay_cluster_on_relay_change;
@@ -72,17 +73,26 @@ status_t relay_cluster_callback_trampoline(zclIncomingAddrInfo_t *pAddrInfo, u8 
 
 status_t relay_cluster_callback(zigbee_relay_cluster *cluster, zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
+  // Check sequence number to prevent duplicate commands
+  if (!relay_cluster_check_sequence(cluster, pAddrInfo->srcAddr, pAddrInfo->seqNum))
+  {
+    printf("Dropping duplicate command from addr 0x%04X, seq %d\r\n", pAddrInfo->srcAddr, pAddrInfo->seqNum);
+    return(ZCL_STA_SUCCESS);
+  }
+
   if (cmdId == ZCL_CMD_ONOFF_ON)
   {
     relay_cluster_on(cluster);
+    relay_cluster_off(cluster);
   }
   else if (cmdId == ZCL_CMD_ONOFF_OFF)
   {
+    relay_cluster_on(cluster);
     relay_cluster_off(cluster);
   }
   else if (cmdId == ZCL_CMD_ONOFF_TOGGLE)
   {
-    relay_cluster_toggle(cluster);
+    relay_cluster_on(cluster);
   }
   else
   {
@@ -119,22 +129,19 @@ void sync_indicator_led(zigbee_relay_cluster *cluster)
 void relay_cluster_on(zigbee_relay_cluster *cluster)
 {
   relay_on(cluster->relay);
-  sync_indicator_led(cluster);
-  relay_cluster_report(cluster);
+  // sync_indicator_led and relay_cluster_report will be called by relay_cluster_on_relay_change callback
 }
 
 void relay_cluster_off(zigbee_relay_cluster *cluster)
 {
   relay_off(cluster->relay);
-  sync_indicator_led(cluster);
-  relay_cluster_report(cluster);
+  // sync_indicator_led and relay_cluster_report will be called by relay_cluster_on_relay_change callback
 }
 
 void relay_cluster_toggle(zigbee_relay_cluster *cluster)
 {
   relay_toggle(cluster->relay);
-  sync_indicator_led(cluster);
-  relay_cluster_report(cluster);
+  // sync_indicator_led and relay_cluster_report will be called by relay_cluster_on_relay_change callback
 }
 
 void relay_cluster_report(zigbee_relay_cluster *cluster)
@@ -162,6 +169,10 @@ void relay_cluster_report(zigbee_relay_cluster *cluster)
 
 void relay_cluster_on_relay_change(zigbee_relay_cluster *cluster, u8 state)
 {
+  // Always sync LED and report state when relay changes
+  sync_indicator_led(cluster);
+  relay_cluster_report(cluster);
+  
   if (cluster->startup_mode == ZCL_START_UP_ONOFF_SET_ONOFF_TOGGLE ||
       cluster->startup_mode == ZCL_START_UP_ONOFF_SET_ONOFF_TO_PREVIOUS)
   {
@@ -283,4 +294,120 @@ void relay_cluster_handle_startup_mode(zigbee_relay_cluster *cluster)
       }
     }
   }
+}
+
+void relay_cluster_init_sequence_tracking(zigbee_relay_cluster *cluster)
+{
+  // Initialize all sequence trackers as invalid
+  for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
+  {
+    cluster->seq_trackers[i].srcAddr = 0;
+    cluster->seq_trackers[i].lastSeqNum = 0;
+    cluster->seq_trackers[i].isValid = 0;
+  }
+  printf("Initialized sequence tracking for endpoint %d\r\n", cluster->endpoint);
+}
+
+bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8 seqNum)
+{
+  // Allow sequence numbers 0, 1, 2 for safety (fresh starts, resets, etc.)
+  if (seqNum <= 2)
+  {
+    printf("Allowing low sequence number %d from addr 0x%04X (safety)\r\n", seqNum, srcAddr);
+    // Still update tracking for future messages
+    relay_cluster_update_sequence_tracker(cluster, srcAddr, seqNum);
+    return true;
+  }
+
+  // Find existing tracker for this source address
+  for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
+  {
+    if (cluster->seq_trackers[i].isValid && cluster->seq_trackers[i].srcAddr == srcAddr)
+    {
+      // Check if this sequence number is newer
+      u8 lastSeq = cluster->seq_trackers[i].lastSeqNum;
+      
+      // Handle rollover (255 -> 0)
+      bool isNewer = false;
+      if (seqNum > lastSeq)
+      {
+        // Normal case: sequence increased
+        if ((seqNum - lastSeq) < 128)  // Reasonable increment, not rollover
+        {
+          isNewer = true;
+        }
+      }
+      else if (seqNum < lastSeq)
+      {
+        // Possible rollover case
+        if ((lastSeq - seqNum) > 20)  // Large gap suggests rollover
+        {
+          isNewer = true;
+        }
+      }
+      // If seqNum == lastSeq, it's a duplicate (isNewer stays false)
+      
+      if (isNewer)
+      {
+        printf("Accepting newer sequence %d from addr 0x%04X (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
+        cluster->seq_trackers[i].lastSeqNum = seqNum;
+        return true;
+      }
+      else
+      {
+        printf("Rejecting old/duplicate sequence %d from addr 0x%04X (last: %d)\r\n", seqNum, srcAddr, lastSeq);
+        return false;
+      }
+    }
+  }
+
+  // Source address not found, add it to a free slot
+  for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
+  {
+    if (!cluster->seq_trackers[i].isValid)
+    {
+      cluster->seq_trackers[i].srcAddr = srcAddr;
+      cluster->seq_trackers[i].lastSeqNum = seqNum;
+      cluster->seq_trackers[i].isValid = 1;
+      printf("Added new source addr 0x%04X with seq %d to tracker slot %d\r\n", srcAddr, seqNum, i);
+      return true;
+    }
+  }
+
+  // No free slots, replace the first one (simple FIFO replacement)
+  cluster->seq_trackers[0].srcAddr = srcAddr;
+  cluster->seq_trackers[0].lastSeqNum = seqNum;
+  cluster->seq_trackers[0].isValid = 1;
+  printf("Replaced tracker slot 0 with addr 0x%04X, seq %d\r\n", srcAddr, seqNum);
+  return true;
+}
+
+void relay_cluster_update_sequence_tracker(zigbee_relay_cluster *cluster, u16 srcAddr, u8 seqNum)
+{
+  // Find existing tracker for this source address
+  for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
+  {
+    if (cluster->seq_trackers[i].isValid && cluster->seq_trackers[i].srcAddr == srcAddr)
+    {
+      cluster->seq_trackers[i].lastSeqNum = seqNum;
+      return;
+    }
+  }
+
+  // Source address not found, add it to a free slot
+  for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
+  {
+    if (!cluster->seq_trackers[i].isValid)
+    {
+      cluster->seq_trackers[i].srcAddr = srcAddr;
+      cluster->seq_trackers[i].lastSeqNum = seqNum;
+      cluster->seq_trackers[i].isValid = 1;
+      return;
+    }
+  }
+
+  // No free slots, replace the first one
+  cluster->seq_trackers[0].srcAddr = srcAddr;
+  cluster->seq_trackers[0].lastSeqNum = seqNum;
+  cluster->seq_trackers[0].isValid = 1;
 }
