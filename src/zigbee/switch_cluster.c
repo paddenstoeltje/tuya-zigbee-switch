@@ -11,7 +11,7 @@
 #include "base_components/relay.h"
 #include "configs/nv_slots_cfg.h"
 
-#define MULTI_PRESS_CNT_TO_RESET    5
+#define MULTI_PRESS_CNT_TO_RESET    10
 
 const u8  multistate_out_of_service = 0;
 const u8  multistate_flags          = 0;
