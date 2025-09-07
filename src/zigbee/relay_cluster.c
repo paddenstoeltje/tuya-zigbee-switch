@@ -311,7 +311,7 @@ void relay_cluster_init_sequence_tracking(zigbee_relay_cluster *cluster)
 bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8 seqNum)
 {
   // Allow sequence numbers 0 for safety (fresh starts, resets, etc.)
-  if (seqNum = 0)
+  if (seqNum == 0)
   {
     printf("Allowing low sequence number %d from addr 0x%04X (safety)\r\n", seqNum, srcAddr);
     relay_cluster_update_sequence_tracker(cluster, srcAddr, seqNum);
