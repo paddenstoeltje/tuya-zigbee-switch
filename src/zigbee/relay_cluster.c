@@ -4,7 +4,9 @@
 #include "relay_cluster.h"
 #include "cluster_common.h"
 #include "configs/nv_slots_cfg.h"
+
 #include "custom_zcl/zcl_onoff_indicator.h"
+#include "base_components/millis.h"
 
 
 
@@ -212,6 +214,14 @@ typedef struct
   u8 indicator_led_on;
 } zigbee_relay_cluster_config;
 
+// Add timestamp to sequence tracker
+typedef struct {
+  u16 srcAddr;
+  u8 lastSeqNum;
+  u8 isValid;
+  u32 lastTimestamp; // seconds
+} relay_seq_tracker_t;
+
 
 zigbee_relay_cluster_config nv_config_buffer;
 
@@ -304,12 +314,23 @@ void relay_cluster_init_sequence_tracking(zigbee_relay_cluster *cluster)
     cluster->seq_trackers[i].srcAddr = 0;
     cluster->seq_trackers[i].lastSeqNum = 0;
     cluster->seq_trackers[i].isValid = 0;
+    cluster->seq_trackers[i].lastTimestamp = 0;
   }
   printf("Initialized sequence tracking for endpoint %d\r\n", cluster->endpoint);
 }
 
 bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8 seqNum)
 {
+
+
+  // Never do sequence tracking for coordinator (address 0x0000)
+  if (srcAddr == 0x0000) {
+    return true;
+  }
+
+  // Get current time in seconds using millis()
+  u32 now = millis() / 1000;
+
   // Allow sequence numbers 0 for safety (fresh starts, resets, etc.)
   if (seqNum == 0)
   {
@@ -323,30 +344,34 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
   {
     if (cluster->seq_trackers[i].isValid && cluster->seq_trackers[i].srcAddr == srcAddr)
     {
-      // Check if this sequence number is newer
       u8 lastSeq = cluster->seq_trackers[i].lastSeqNum;
-      
-      // Handle rollover (255 -> 0)
+      u32 lastTs = cluster->seq_trackers[i].lastTimestamp;
       bool isNewer = false;
+      // Accept if 15s have passed since last message from this device
+      if (now && lastTs && (now - lastTs >= 15)) {
+        printf("Accepting message from addr 0x%04X due to timeout (now=%lu, last=%lu)\r\n", srcAddr, (unsigned long)now, (unsigned long)lastTs);
+        cluster->seq_trackers[i].lastSeqNum = seqNum;
+        cluster->seq_trackers[i].lastTimestamp = now;
+        return true;
+      }
+      // Handle rollover (255 -> 0)
       if (seqNum > lastSeq)
       {
-        // Normal case: sequence increased
         isNewer = true;
       }
       else if (seqNum < lastSeq)
       {
-        // Possible rollover case
-        if ((lastSeq - seqNum) > 20)  // Large gap suggests rollover
+        if ((lastSeq - seqNum) > 20)
         {
           isNewer = true;
         }
       }
       // If seqNum == lastSeq, it's a duplicate (isNewer stays false)
-      
       if (isNewer)
       {
         printf("Accepting newer sequence %d from addr 0x%04X (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
         cluster->seq_trackers[i].lastSeqNum = seqNum;
+        cluster->seq_trackers[i].lastTimestamp = now;
         return true;
       }
       else
@@ -365,6 +390,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       cluster->seq_trackers[i].srcAddr = srcAddr;
       cluster->seq_trackers[i].lastSeqNum = seqNum;
       cluster->seq_trackers[i].isValid = 1;
+      cluster->seq_trackers[i].lastTimestamp = now;
       printf("Added new source addr 0x%04X with seq %d to tracker slot %d\r\n", srcAddr, seqNum, i);
       return true;
     }
@@ -374,18 +400,27 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
   cluster->seq_trackers[0].srcAddr = srcAddr;
   cluster->seq_trackers[0].lastSeqNum = seqNum;
   cluster->seq_trackers[0].isValid = 1;
+  cluster->seq_trackers[0].lastTimestamp = now;
   printf("Replaced tracker slot 0 with addr 0x%04X, seq %d\r\n", srcAddr, seqNum);
   return true;
 }
 
 void relay_cluster_update_sequence_tracker(zigbee_relay_cluster *cluster, u16 srcAddr, u8 seqNum)
 {
+  // Never do sequence tracking for coordinator (address 0x0000)
+  if (srcAddr == 0x0000) {
+    return;
+  }
+
+  u32 now = millis() / 1000;
+
   // Find existing tracker for this source address
   for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
   {
     if (cluster->seq_trackers[i].isValid && cluster->seq_trackers[i].srcAddr == srcAddr)
     {
       cluster->seq_trackers[i].lastSeqNum = seqNum;
+      cluster->seq_trackers[i].lastTimestamp = now;
       return;
     }
   }
@@ -398,6 +433,7 @@ void relay_cluster_update_sequence_tracker(zigbee_relay_cluster *cluster, u16 sr
       cluster->seq_trackers[i].srcAddr = srcAddr;
       cluster->seq_trackers[i].lastSeqNum = seqNum;
       cluster->seq_trackers[i].isValid = 1;
+      cluster->seq_trackers[i].lastTimestamp = now;
       return;
     }
   }
@@ -406,4 +442,5 @@ void relay_cluster_update_sequence_tracker(zigbee_relay_cluster *cluster, u16 sr
   cluster->seq_trackers[0].srcAddr = srcAddr;
   cluster->seq_trackers[0].lastSeqNum = seqNum;
   cluster->seq_trackers[0].isValid = 1;
+  cluster->seq_trackers[0].lastTimestamp = now;
 }

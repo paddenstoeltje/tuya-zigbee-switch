@@ -15,6 +15,7 @@ typedef struct
   u16 srcAddr;        // Source address
   u8  lastSeqNum;     // Last seen sequence number
   u8  isValid;        // Whether this entry is valid
+  u32 lastTimestamp;  // Last message timestamp in seconds
 } seq_tracker_entry_t;
 
 #define MAX_SEQ_TRACKERS 4  // Support up to 4 different sources
