@@ -4,24 +4,17 @@
 #include "relay_cluster.h"
 #include "cluster_common.h"
 #include "configs/nv_slots_cfg.h"
-
 #include "custom_zcl/zcl_onoff_indicator.h"
 #include "base_components/millis.h"
 
-
-
 status_t relay_cluster_callback(zigbee_relay_cluster *cluster, zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
 status_t relay_cluster_callback_trampoline(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
-
 void relay_cluster_on_relay_change(zigbee_relay_cluster *cluster, u8 state);
 void relay_cluster_on_write_attr(zigbee_relay_cluster *cluster, zclWriteCmd_t *pWriteReqCmd);
-
 void relay_cluster_store_attrs_to_nv(zigbee_relay_cluster *cluster);
 void relay_cluster_load_attrs_from_nv(zigbee_relay_cluster *cluster);
 void relay_cluster_handle_startup_mode(zigbee_relay_cluster *cluster);
-
 void sync_indicator_led(zigbee_relay_cluster *cluster);
-
 zigbee_relay_cluster *relay_cluster_by_endpoint[10];
 
 void relay_cluster_callback_attr_write_trampoline(u8 clusterId, zclWriteCmd_t *pWriteReqCmd)
@@ -142,6 +135,13 @@ void relay_cluster_off(zigbee_relay_cluster *cluster)
 
 void relay_cluster_toggle(zigbee_relay_cluster *cluster)
 {
+  //Reset all sequence trackers
+  for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
+  {
+      printf("Resetting all sequence trackers\r\n");
+      cluster->seq_trackers[i].lastSeqNum = 0;
+  }
+
   relay_toggle(cluster->relay);
   // sync_indicator_led and relay_cluster_report will be called by relay_cluster_on_relay_change callback
 }
@@ -214,7 +214,6 @@ typedef struct
   u8 indicator_led_on;
 } zigbee_relay_cluster_config;
 
-// Add timestamp to sequence tracker
 typedef struct {
   u16 srcAddr;
   u8 lastSeqNum;
@@ -222,9 +221,7 @@ typedef struct {
   u32 lastTimestamp; // seconds
 } relay_seq_tracker_t;
 
-
 zigbee_relay_cluster_config nv_config_buffer;
-
 
 void relay_cluster_store_attrs_to_nv(zigbee_relay_cluster *cluster)
 {
@@ -322,7 +319,6 @@ void relay_cluster_init_sequence_tracking(zigbee_relay_cluster *cluster)
 bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8 seqNum)
 {
 
-
   // Never do sequence tracking for coordinator (address 0x0000)
   if (srcAddr == 0x0000) {
     return true;
@@ -331,7 +327,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
   // Get current time in seconds using millis()
   u32 now = millis() / 1000;
 
-  // Allow sequence numbers 0 for safety (fresh starts, resets, etc.)
+  // Allow sequence number 0 for safety (fresh starts, resets, etc.)
   if (seqNum == 0)
   {
     printf("Allowing low sequence number %d from addr 0x%04X (safety)\r\n", seqNum, srcAddr);
@@ -361,7 +357,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       }
       else if (seqNum < lastSeq)
       {
-        if ((lastSeq - seqNum) > 20)
+        if ((lastSeq - seqNum) > 3)
         {
           isNewer = true;
         }
