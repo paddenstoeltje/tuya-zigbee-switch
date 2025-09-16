@@ -110,8 +110,11 @@
       "_TZ3000_4rbqgcuv",
       "Tuya-TS0001-Avatto-custom",
       "TS0001-AV-CUS",
-      "TS0001-AVB"
+      "TS0001-AVB",
+      "4rbqgcuv"
     ]
+
+    
   },
   {
     "fileName": "1141-aa03-ffffffff-tlc_switch-forced.zigbee",
