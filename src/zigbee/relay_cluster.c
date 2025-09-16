@@ -87,6 +87,13 @@ status_t relay_cluster_callback(zigbee_relay_cluster *cluster, zclIncomingAddrIn
   }
   else if (cmdId == ZCL_CMD_ONOFF_TOGGLE)
   {
+    //Reset all sequence trackers
+    printf("Resetting all sequence trackers\r\n");
+    for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
+    {
+        cluster->seq_trackers[i].lastSeqNum = 0;
+    }
+    
     relay_cluster_on(cluster);
   }
   else
@@ -135,12 +142,6 @@ void relay_cluster_off(zigbee_relay_cluster *cluster)
 
 void relay_cluster_toggle(zigbee_relay_cluster *cluster)
 {
-  //Reset all sequence trackers
-  for (u8 i = 0; i < MAX_SEQ_TRACKERS; i++)
-  {
-      printf("Resetting all sequence trackers\r\n");
-      cluster->seq_trackers[i].lastSeqNum = 0;
-  }
 
   relay_toggle(cluster->relay);
   // sync_indicator_led and relay_cluster_report will be called by relay_cluster_on_relay_change callback
