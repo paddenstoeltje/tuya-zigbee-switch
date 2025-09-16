@@ -214,12 +214,7 @@ typedef struct
   u8 indicator_led_on;
 } zigbee_relay_cluster_config;
 
-typedef struct {
-  u16 srcAddr;
-  u8 lastSeqNum;
-  u8 isValid;
-  u32 lastTimestamp; // seconds
-} relay_seq_tracker_t;
+
 
 zigbee_relay_cluster_config nv_config_buffer;
 
