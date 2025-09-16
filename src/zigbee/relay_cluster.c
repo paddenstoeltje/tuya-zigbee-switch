@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "tl_common.h"
 #include "zb_common.h"
 #include "endpoint.h"
