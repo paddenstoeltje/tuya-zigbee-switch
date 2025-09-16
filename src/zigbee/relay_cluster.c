@@ -353,7 +353,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       }
       else if (seqNum < lastSeq)
       {
-        if ((lastSeq - seqNum) > 3)
+        if ((lastSeq - seqNum) > 5)
         {
           isNewer = true;
         }
