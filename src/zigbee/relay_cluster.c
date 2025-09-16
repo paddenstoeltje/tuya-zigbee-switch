@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "tl_common.h"
 #include "zb_common.h"
 #include "endpoint.h"
@@ -72,7 +71,7 @@ status_t relay_cluster_callback(zigbee_relay_cluster *cluster, zclIncomingAddrIn
   // Check sequence number to prevent duplicate commands
   if (!relay_cluster_check_sequence(cluster, pAddrInfo->srcAddr, pAddrInfo->seqNum))
   {
-    printf("Dropping duplicate command from addr 0x%04X, seq %d\r\n", pAddrInfo->srcAddr, pAddrInfo->seqNum);
+  printf("Dropping duplicate command from addr %d, seq %d\r\n", pAddrInfo->srcAddr, pAddrInfo->seqNum);
     return(ZCL_STA_SUCCESS);
   }
 
@@ -327,7 +326,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
   // Allow sequence number 0 for safety (fresh starts, resets, etc.)
   if (seqNum == 0)
   {
-    printf("Allowing low sequence number %d from addr 0x%04X (safety)\r\n", seqNum, srcAddr);
+  printf("Allowing low sequence number %d from addr %d (safety)\r\n", seqNum, srcAddr);
     relay_cluster_update_sequence_tracker(cluster, srcAddr, seqNum);
     return true;
   }
@@ -342,7 +341,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       bool isNewer = false;
       // Accept if 15s have passed since last message from this device
       if (now && lastTs && (now - lastTs >= 15)) {
-        printf("Accepting message from addr 0x%04X due to timeout (now=%lu, last=%lu)\r\n", srcAddr, (unsigned long)now, (unsigned long)lastTs);
+  printf("Accepting message from addr %d due to timeout (now=%d, last=%d)\r\n", srcAddr, (int)now, (int)lastTs);
         cluster->seq_trackers[i].lastSeqNum = seqNum;
         cluster->seq_trackers[i].lastTimestamp = now;
         return true;
@@ -362,15 +361,15 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       // If seqNum == lastSeq, it's a duplicate (isNewer stays false)
       if (isNewer)
       {
-        printf("Accept seq %d from addr 0x%04X (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
-        printf("Current time: %lu\r\n", (unsigned long)now);
+  printf("Accept seq %d from addr %d (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
+  printf("Current time: %d\r\n", (int)now);
         cluster->seq_trackers[i].lastSeqNum = seqNum;
         cluster->seq_trackers[i].lastTimestamp = now;
         return true;
       }
       else
       {
-        printf("Rejecting old/duplicate sequence %d from addr 0x%04X (last: %d)\r\n", seqNum, srcAddr, lastSeq);
+  printf("Rejecting old/duplicate sequence %d from addr %d (last: %d)\r\n", seqNum, srcAddr, lastSeq);
         return false;
       }
     }
@@ -385,7 +384,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       cluster->seq_trackers[i].lastSeqNum = seqNum;
       cluster->seq_trackers[i].isValid = 1;
       cluster->seq_trackers[i].lastTimestamp = now;
-      printf("Added new source addr 0x%04X with seq %d to tracker slot %d\r\n", srcAddr, seqNum, i);
+  printf("Added new source addr %d with seq %d to tracker slot %d\r\n", srcAddr, seqNum, i);
       return true;
     }
   }
@@ -395,7 +394,7 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
   cluster->seq_trackers[0].lastSeqNum = seqNum;
   cluster->seq_trackers[0].isValid = 1;
   cluster->seq_trackers[0].lastTimestamp = now;
-  printf("Replaced tracker slot 0 with addr 0x%04X, seq %d\r\n", srcAddr, seqNum);
+  printf("Replaced tracker slot 0 with addr %d, seq %d\r\n", srcAddr, seqNum);
   return true;
 }
 
