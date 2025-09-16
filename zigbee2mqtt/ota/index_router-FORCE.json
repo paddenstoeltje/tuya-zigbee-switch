@@ -2,11 +2,11 @@
   {
     "fileName": "1141-aa07-ffffffff-tlc_switch-forced.zigbee",
     "fileVersion": 4294967295,
-    "fileSize": 168578,
-    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/9985f4ab44d7c517194a5588bcfdcc5854057f8a/bin/TS0001_AVATTO/1141-aa07-ffffffff-tlc_switch-forced.zigbee",
+    "fileSize": 168594,
+    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/refs/heads/main/bin/TS0001_AVATTO/1141-aa07-ffffffff-tlc_switch-forced.zigbee",
     "imageType": 43527,
     "manufacturerCode": 4417,
-    "sha512": "406d198946ac9ea601347d653bd0cf4f006938acc56aeed59c09f88b38dfed88682ffa0c62a9b5d22d07444ba9debce77288c51d0d0b56db9bd141253c6b62f1",
+    "sha512": "7d4e135b6447cbc6222b34f64c944ec7b2a52caf44e5e93266c74784153eef1693f0438428ad0a63c54eeba5b57f5dec515b56020c59858d28e3697b1b7207b5",
     "otaHeaderString": "Telink Zigbee OTA\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
     "manufacturerName": [
       "_TZ3000_4rbqgcuv",
@@ -19,11 +19,11 @@
   {
     "fileName": "1141-aa08-ffffffff-tlc_switch-forced.zigbee",
     "fileVersion": 4294967295,
-    "fileSize": 168594,
-    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/9985f4ab44d7c517194a5588bcfdcc5854057f8a/bin/TS0002_AVATTO/1141-aa08-ffffffff-tlc_switch-forced.zigbee",
+    "fileSize": 168610,
+    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/refs/heads/main/bin/TS0002_AVATTO/1141-aa08-ffffffff-tlc_switch-forced.zigbee",
     "imageType": 43528,
     "manufacturerCode": 4417,
-    "sha512": "e8dfdb257aee42ea5d5952eaccbb9d1cb7f97ffeaa52abb727e999cc53ff97cf0057cb9f1a4a6432c2f8edb19940efdf6e374b21c06e71763a591292b25e1e0a",
+    "sha512": "6e301b80c13176081e597029c108a3b855bb7d335a48c4431dd758eedd12369cec11a5a851fadb67575e88a238a42489bc8def752db4f7f1be2df9e873c65565",
     "otaHeaderString": "Telink Zigbee OTA\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
     "manufacturerName": [
       "_TZ3000_mtnpt6ws",
@@ -35,11 +35,11 @@
   {
     "fileName": "1141-aa17-ffffffff-tlc_switch-forced.zigbee",
     "fileVersion": 4294967295,
-    "fileSize": 168594,
-    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/9985f4ab44d7c517194a5588bcfdcc5854057f8a/bin/TS0003_AVATTO/1141-aa17-ffffffff-tlc_switch-forced.zigbee",
+    "fileSize": 168610,
+    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/refs/heads/main/bin/TS0003_AVATTO/1141-aa17-ffffffff-tlc_switch-forced.zigbee",
     "imageType": 43543,
     "manufacturerCode": 4417,
-    "sha512": "0f1cf96dafbc869a0aaae0e2b1326b9f6b40e092b9af9854ba1b2a0b884c1c7c8432198cd9c2bd2ead4a0910f83212b728c073aeaaabb5520c6c74cf5b6b7c5c",
+    "sha512": "d65bd1c8d321e759aba981c31b5014ca4af3baac49ef9d27d7a6464d950fcb4d442ef3c1ae5db6905bfc4f4d5c9946f2dceb1963783548ce89d6125bdc741e90",
     "otaHeaderString": "Telink Zigbee OTA\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
     "manufacturerName": [
       "_TZ3000_hbic3ka3",
@@ -51,11 +51,11 @@
   {
     "fileName": "1141-aa09-ffffffff-tlc_switch-forced.zigbee",
     "fileVersion": 4294967295,
-    "fileSize": 168610,
-    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/9985f4ab44d7c517194a5588bcfdcc5854057f8a/bin/TS0004_AVATTO/1141-aa09-ffffffff-tlc_switch-forced.zigbee",
+    "fileSize": 168626,
+    "url": "https://github.com/paddenstoeltje/tuya-zigbee-switch/raw/refs/heads/main/bin/TS0004_AVATTO/1141-aa09-ffffffff-tlc_switch-forced.zigbee",
     "imageType": 43529,
     "manufacturerCode": 4417,
-    "sha512": "e772af2bd1fa1e8e8ba59f8a32127dcc75c0588fa2a8f3e2b3814d2b66874b3247f2bcc7dabf47df3e43b84cc08d276f7a8fe8d66dfb5d6521c9d3e333c9257f",
+    "sha512": "594f81895f3dfd6f2ac745ea510dade9be1f5483dc80b42aa7eec83c6ef5cc931c333674daf8b9691aa38738819ed7f7799c71eb30e1fe71c973509af402895c",
     "otaHeaderString": "Telink Zigbee OTA\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
     "manufacturerName": [
       "_TZ3000_5ajpkyq6",
