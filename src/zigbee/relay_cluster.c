@@ -315,19 +315,11 @@ void relay_cluster_init_sequence_tracking(zigbee_relay_cluster *cluster)
 bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8 seqNum)
 {
 
-  // Never do sequence tracking for coordinator (address 0x0000)
-  if (srcAddr == 0x0000) {
-    return true;
-  }
-
   // Get current time in seconds using millis()
   u32 now = millis() / 1000;
 
-  // Allow sequence number 0 for safety (fresh starts, resets, etc.)
-  if (seqNum == 0)
-  {
-  printf("Allowing low sequence number %d from addr %d (safety)\r\n", seqNum, srcAddr);
-    relay_cluster_update_sequence_tracker(cluster, srcAddr, seqNum);
+  // Never do sequence tracking for coordinator (address 0x0000)
+  if (srcAddr == 0x0000) {
     return true;
   }
 
@@ -341,12 +333,12 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       bool isNewer = false;
       // Accept if 15s have passed since last message from this device
       if (now && lastTs && (now - lastTs >= 15)) {
-  printf("Accepting message from addr %d due to timeout (now=%d, last=%d)\r\n", srcAddr, (int)now, (int)lastTs);
+        printf("Accepting message from addr %d due to timeout (now=%d, last=%d)\r\n", srcAddr, (int)now, (int)lastTs);
         cluster->seq_trackers[i].lastSeqNum = seqNum;
         cluster->seq_trackers[i].lastTimestamp = now;
         return true;
       }
-      // Handle rollover (255 -> 0)
+      // Handle rollover
       if (seqNum > lastSeq)
       {
         isNewer = true;
@@ -361,15 +353,15 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       // If seqNum == lastSeq, it's a duplicate (isNewer stays false)
       if (isNewer)
       {
-  printf("Accept seq %d from addr %d (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
-  printf("Current time: %d\r\n", (int)now);
+        printf("Accept seq %d from addr %d (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
+        printf("Current time: %d\r\n", (int)now);
         cluster->seq_trackers[i].lastSeqNum = seqNum;
         cluster->seq_trackers[i].lastTimestamp = now;
         return true;
       }
       else
       {
-  printf("Rejecting old/duplicate sequence %d from addr %d (last: %d)\r\n", seqNum, srcAddr, lastSeq);
+        printf("Rejecting old/duplicate sequence %d from addr %d (last: %d)\r\n", seqNum, srcAddr, lastSeq);
         return false;
       }
     }

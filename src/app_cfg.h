@@ -41,7 +41,7 @@ extern "C" {
 #define DEBUG_ENABLE        0           // lcd = DeviceSysException
 
 #ifndef UART_PRINTF_MODE
-#define UART_PRINTF_MODE    1
+#define UART_PRINTF_MODE    0
 #endif
 #define USB_PRINTF_MODE     0
 
