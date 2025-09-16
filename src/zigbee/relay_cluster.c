@@ -361,7 +361,8 @@ bool relay_cluster_check_sequence(zigbee_relay_cluster *cluster, u16 srcAddr, u8
       // If seqNum == lastSeq, it's a duplicate (isNewer stays false)
       if (isNewer)
       {
-        printf("Accepting newer sequence %d from addr 0x%04X (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
+        printf("Accept seq %d from addr 0x%04X (prev: %d)\r\n", seqNum, srcAddr, lastSeq);
+        printf("Current time: %lu\r\n", (unsigned long)now);
         cluster->seq_trackers[i].lastSeqNum = seqNum;
         cluster->seq_trackers[i].lastTimestamp = now;
         return true;
